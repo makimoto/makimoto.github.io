@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Glitchy</title>
+  <script src="./jquery-2.1.0.min.js"></script>
+  <script src="./base64.js"></script>
+  <script>
+navigator.getMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+
+var randomChar = function () {
+  var candidates = "abcdef0123456789";
+  return candidates.charAt(Math.floor(Math.random() * candidates.length));
+}
+
+$(document).ready(function() {
+  var canvas = document.getElementById("canvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var video = document.getElementById("video");
+  var img = document.getElementById("img");
+
+  navigator.getMedia(
+    { video: true },
+    function(localMediaStream) {
+      video.src = window.URL.createObjectURL(localMediaStream);
+      video.onloadedmetadata = function(e) {
+        setInterval(function() {
+          canvas.getContext('2d').drawImage(video, 0, 0, $(video).width(), $(video).height());
+          var imgData = canvas.toDataURL("image/jpeg");
+          var tmp = imgData.split(",");
+          var schema = tmp[0];
+          var data = tmp[1];
+          var glitchedData = Base64.btoa(Base64.atob(data).replace(randomChar(), randomChar(), "g"));
+          $(video).hide();
+          img.src = schema + "," + glitchedData;
+          $(img).show()
+        }, 300);
+      };
+    },
+    function(err) {
+      console.log(err);
+    }
+  )
+});
+  </script>
+  <style>
+.full {
+  min-height: 100%;
+  min-width: 1024px;
+  width: 100%;
+  height: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+  </style>
+</head>
+<body>
+  <video id="video" class="full" autoplay></video>
+  <img id="img" class="full" style="display:none"></img>
+  <canvas id="canvas" style="display:none"></canvas>
+</body>
+</html>
